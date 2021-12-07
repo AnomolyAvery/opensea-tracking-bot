@@ -1,0 +1,20 @@
+{
+    "name": "opensea-tracking-bot",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "MIT",
+    "scripts": {
+        "start": "node src/entry.js",
+        "dev": "nodemon src/entry.js"
+    },
+    "dependencies": {
+        "axios": "^0.24.0",
+        "discord.js": "^13.3.1",
+        "dotenv": "^10.0.0",
+        "moment": "^2.29.1",
+        "node-cron": "^3.0.0"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.15"
+    }
+}
