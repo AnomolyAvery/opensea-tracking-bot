@@ -1,10 +1,10 @@
-//Fast file json parer
+const config = require('./config');
 const fs = require('fs');
 const path = require('path');
 
-class Db {
-    cache = {};
+let cache = {};
 
+class Db {
     constructor(file) {
         console.log(`Loading database ${file}`);
         this.file = file;
@@ -12,27 +12,30 @@ class Db {
     }
 
     get(key) {
-        return this.cache[key] || null;
+        if (cache) {
+            return cache[key] ?? null;
+        }
+        return null;
     }
 
     set(key, value) {
-        this.cache[key] = value;
+        cache[key] = value;
     }
 
     load() {
         if (fs.existsSync(this.file)) {
             const data = fs.readFileSync(this.file);
-            this.cache = JSON.parse(data);
+            cache = JSON.parse(data);
         }
     }
 
     save() {
-        const data = JSON.stringify(this.cache);
+        const data = JSON.stringify(cache);
         fs.writeFileSync(this.file, data);
     }
 
     clear() {
-        this.cache = {};
+        cache = {};
     }
 
     getFile() {
@@ -40,4 +43,13 @@ class Db {
     }
 }
 
-module.exports = Db;
+const instance = new Db(config.storagePath);
+
+module.exports = {
+    get: instance.get,
+    set: instance.set,
+    load: instance.load,
+    save: instance.save,
+    clear: instance.clear,
+    getFile: instance.getFile,
+};

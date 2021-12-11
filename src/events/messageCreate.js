@@ -21,12 +21,26 @@ const messageCreate = {
         const command = args.shift().toLowerCase();
 
         // Check if command exists via name or alias
-        const cmd = commands.find(
-            (c) => c.name === command || c.aliases.includes(command)
-        );
-        if (!cmd) return;
 
-        cmd.handler(client, message, args);
+        //Check if alias exists
+
+        let cmd = commands.find((c) => c.name === command);
+
+        if (!cmd) {
+            const aliases = commands.filter((c) => {
+                if (c.aliases) {
+                    return c.aliases.includes(command);
+                }
+                return false;
+            });
+
+            if (aliases.length === 0) return;
+
+            cmd = aliases[0];
+        }
+
+        await cmd.handler(client, message, args);
+        await message.delete();
     },
 };
 

@@ -9,6 +9,7 @@ const Watcher = require('./core/watcher');
             Discord.Intents.FLAGS.GUILD_MESSAGES,
         ],
     });
+
     const app = new App(client);
     const watcher = new Watcher(client);
 

@@ -1,4 +1,4 @@
-const { Client, Message } = require('discord.js');
+const { Client, Message, MessageEmbed } = require('discord.js');
 
 const helpCommand = {
     name: 'help',
@@ -13,7 +13,32 @@ const helpCommand = {
      * @param {Array<String>} args
      */
     handler: async (client, message, args) => {
-        await message.reply('This is a placeholder for the help command.');
+        const helpEmbed = new MessageEmbed()
+            .setTitle('Help')
+            .setColor('#0099ff')
+            .setDescription('Here are all the commands you can use.')
+            .setFooter('Some footer goes here.');
+
+        const commandFields = [
+            {
+                name: '!bio',
+                value: 'Configure the nickname and profile picture of the bot.',
+            },
+            {
+                name: '!pulse',
+                value: 'Get pulse of the selected collection.',
+            },
+            {
+                name: '!setChannel',
+                value: 'Set the channel where the bot will post sale notifications.',
+            },
+        ];
+
+        helpEmbed.addFields(commandFields);
+
+        await message.reply({
+            embeds: [helpEmbed],
+        });
     },
 };
 

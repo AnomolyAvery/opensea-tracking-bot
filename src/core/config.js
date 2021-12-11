@@ -9,4 +9,8 @@ module.exports = {
     storagePath:
         process.env.STORAGE_PATH ||
         path.join(__dirname, '../../storage/db-1.json'),
+    botName: process.env.BOT_NAME || '',
+    welcomeMessage: {
+        description: process.env.WELCOME_MESSAGE_DESCRIPTION || '',
+    },
 };
