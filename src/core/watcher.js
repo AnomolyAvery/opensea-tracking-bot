@@ -192,7 +192,7 @@ class Watcher {
         const buyerName = _.get(
             buyer,
             ['user', 'username'],
-            _.get(buyer, 'address')
+            _.get(buyer, 'address').substring(0, 6) + '...'
         );
         if (!buyerName) {
             console.log(`No buyer name for ${assetName}`);
@@ -203,7 +203,7 @@ class Watcher {
         const sellerName = _.get(
             seller,
             ['user', 'username'],
-            _.get(seller, 'address')
+            _.get(seller, 'address').substring(0, 6) + '...'
         );
         if (!sellerName) {
             console.log(`No seller name for ${assetName}`);
