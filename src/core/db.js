@@ -5,9 +5,7 @@ const path = require('path');
 let cache = {};
 
 class Db {
-    constructor(file) {
-        console.log(`Loading database ${file}`);
-        this.file = file;
+    constructor() {
         this.load();
     }
 
@@ -23,15 +21,15 @@ class Db {
     }
 
     load() {
-        if (fs.existsSync(this.file)) {
-            const data = fs.readFileSync(this.file);
+        if (fs.existsSync(config.storagePath)) {
+            const data = fs.readFileSync(config.storagePath);
             cache = JSON.parse(data);
         }
     }
 
     save() {
         const data = JSON.stringify(cache);
-        fs.writeFileSync(this.file, data);
+        fs.writeFileSync(config.storagePath, data);
     }
 
     clear() {

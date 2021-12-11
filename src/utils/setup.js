@@ -9,12 +9,51 @@ const {
     User,
     GuildMember,
 } = require('discord.js');
+const db = require('../core/db');
+
+/**
+ *
+ * @param {Message} message
+ */
+const networkQuestionMessage = async (message) => {
+    const channel = message.channel;
+
+    if (!channel.isText()) return;
+
+    const questionMessage = await channel.send(
+        'Please enter the network you would like to interact with. (1. ETH)'
+    );
+
+    const networkMessages = await channel.awaitMessages({
+        max: 1,
+        filter: (m) => m.author.id === interaction.user.id,
+    });
+
+    const selectedNetwork = networkMessages.first().content;
+    if (selectedNetwork != '1') {
+        await questionMessage.delete();
+        networkMessages.forEach(async (m) => {
+            if (!m || m.deleted || !m.deletable) {
+                return;
+            }
+
+            await m.delete();
+        });
+        return await networkQuestionMessage(message);
+    }
+
+    await questionMessage.delete();
+
+    networkMessages.forEach(async (m) => await m.delete());
+
+    return selectedNetwork;
+};
 
 /**
  *
  * @param {ButtonInteraction} interaction
  */
-const networkQuestion = async (interaction) => {
+const networkQuestionInteraction = async (interaction) => {
     //This removes the "Please wait..." message in the beginning
 
     // Check if reply is already deleted
@@ -64,15 +103,102 @@ const networkQuestion = async (interaction) => {
 
 /**
  *
+ * @param {Message} Message
+ */
+const smartContractQuestionMessage = async (message) => {
+    const channel = message.channel;
+
+    if (!channel.isText()) return;
+
+    const questionMessage = await channel.send(
+        'Please paste your Smart Contract address in below'
+    );
+
+    const smartContractMessages = await channel.awaitMessages({
+        max: 1,
+        filter: (m) => m.author.id === interaction.user.id,
+    });
+
+    const smartContractAdd = smartContractMessages.first().content;
+
+    db.set('smart_contract', smartContractAdd);
+
+    await questionMessage.delete();
+
+    smartContractMessages.forEach(async (m) => await m.delete());
+
+    return smartContractAdd;
+};
+
+/**
+ *
  * @param {ButtonInteraction} interaction
  */
-const collectionSlugQuestion = async (interaction) => {
+const smartContractQuestionInteraction = async (interaction) => {
     const channel = interaction.channel;
 
     if (!channel.isText()) return;
 
     const questionMessage = await channel.send(
-        'Please enter the collection slug you would like to interact with.'
+        'Please paste your Smart Contract address in below'
+    );
+
+    const smartContractMessages = await channel.awaitMessages({
+        max: 1,
+        filter: (m) => m.author.id === interaction.user.id,
+    });
+
+    const smartContractAdd = smartContractMessages.first().content;
+
+    db.set('smart_contract', smartContractAdd);
+
+    await questionMessage.delete();
+
+    smartContractMessages.forEach(async (m) => await m.delete());
+
+    return smartContractAdd;
+};
+
+/**
+ *
+ * @param {Message} message
+ */
+const collectionSlugQuestionMessage = async (message) => {
+    const channel = message.channel;
+
+    if (!channel.isText()) return;
+
+    const questionMessage = await channel.send(
+        'Please paste your OpenSea collection URL Slug [example slug: opensea.io/URL-Slug]:'
+    );
+
+    const collectionSlugMessages = await channel.awaitMessages({
+        filter: (m) => m.author.id === interaction.user.id,
+        time: 60000,
+        max: 1,
+        errors: ['time'],
+    });
+
+    const selectedCollectionSlug = collectionSlugMessages.first().content;
+
+    await questionMessage.delete();
+
+    collectionSlugMessages.forEach(async (m) => await m.delete());
+
+    return selectedCollectionSlug;
+};
+
+/**
+ *
+ * @param {ButtonInteraction} interaction
+ */
+const collectionSlugQuestionInteraction = async (interaction) => {
+    const channel = interaction.channel;
+
+    if (!channel.isText()) return;
+
+    const questionMessage = await channel.send(
+        'Please paste your OpenSea collection URL Slug [example slug: opensea.io/URL-Slug]:'
     );
 
     const collectionSlugMessages = await channel.awaitMessages({
@@ -96,16 +222,35 @@ const collectionSlugQuestion = async (interaction) => {
  * @param {ButtonInteraction} interaction
  * @returns
  */
-const setup = async (interaction) => {
+const setupInteraction = async (interaction) => {
     if (!interaction.isButton()) return;
 
     await interaction.reply('Please wait...');
     const selectedNetwork = await networkQuestion(interaction);
     const selectedSlug = await collectionSlugQuestion(interaction);
+    const smartContractAdd = await smartContractQuestion(interaction);
 
     return {
         network: selectedNetwork,
         collectionSlug: selectedSlug,
+        smartContract: smartContractAdd,
+    };
+};
+
+/**
+ *
+ * @param {Message} message
+ */
+const setupMessage = async (message) => {
+    await message.reply('Please wait...');
+    const selectedNetwork = await networkQuestionMessage(message);
+    const selectedSlug = await collectionSlugQuestionMessage(message);
+    const smartContractAdd = await smartContractQuestionMessage(message);
+
+    return {
+        network: selectedNetwork,
+        collectionSlug: selectedSlug,
+        smartContract: smartContractAdd,
     };
 };
 
@@ -163,6 +308,7 @@ const setupReview = async (channel, watchedUser, setupFields) => {
 };
 
 module.exports = {
-    setup,
+    setupInteraction,
+    setupMessage,
     setupReview,
 };

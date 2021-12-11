@@ -91,6 +91,7 @@ class Watcher {
 
             _.each(sortedEvents, async (event) => {
                 const created = _.get(event, 'created_date');
+
                 cache.set('lastSaleTime', created);
                 return this.formatAndSendEvent(event);
             });
@@ -187,42 +188,25 @@ class Watcher {
             return;
         }
 
-        const transaction = _.get(event, 'transaction');
-        if (!transaction) {
-            console.log(`No transaction for ${assetName}`);
-            return;
-        }
-        const fromAccount = _.get(event, 'from_account');
-        if (!fromAccount) {
-            console.log(`No from account for ${assetName}`);
-            return;
-        }
-
-        const toAccount = _.get(event, 'to_account');
-        if (!toAccount) {
-            console.log(`No to account for ${assetName}`);
-            return;
-        }
-
-        const fromFieldValue = _.get(
-            fromAccount,
+        const buyer = _.get(event, 'winner_account');
+        const buyerName = _.get(
+            buyer,
             ['user', 'username'],
-            _.get(fromAccount, 'address')
+            _.get(buyer, 'address')
         );
-
-        if (!fromFieldValue) {
-            console.log(`No from field value for ${assetName}`);
+        if (!buyerName) {
+            console.log(`No buyer name for ${assetName}`);
             return;
         }
 
-        const toFieldValue = _.get(
-            toAccount,
+        const seller = _.get(event, 'seller');
+        const sellerName = _.get(
+            seller,
             ['user', 'username'],
-            _.get(toAccount, 'address')
+            _.get(seller, 'address')
         );
-
-        if (!toFieldValue) {
-            console.log(`No to field value for ${assetName}`);
+        if (!sellerName) {
+            console.log(`No seller name for ${assetName}`);
             return;
         }
 
@@ -239,12 +223,12 @@ class Watcher {
             )
             .addField(
                 'Seller',
-                `[${fromFieldValue}](https://opensea.io/${fromFieldValue}?ref=0xc8C75e7d1d55Ab0E01280007EB0CE081926E9eb3&utm_source=alphanft.xyz)`,
+                `[${sellerName}](https://opensea.io/${sellerName}?ref=0xc8C75e7d1d55Ab0E01280007EB0CE081926E9eb3&utm_source=alphanft.xyz)`,
                 true
             )
             .addField(
                 'Buyer',
-                `[${toFieldValue}](https://opensea.io/${toFieldValue}?ref=0xc8C75e7d1d55Ab0E01280007EB0CE081926E9eb3&utm_source=alphanft.xyz)`,
+                `[${buyerName}](https://opensea.io/${buyerName}?ref=0xc8C75e7d1d55Ab0E01280007EB0CE081926E9eb3&utm_source=alphanft.xyz)`,
                 true
             );
 

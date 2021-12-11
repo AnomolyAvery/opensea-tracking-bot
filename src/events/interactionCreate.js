@@ -23,13 +23,18 @@ const interactionCreate = {
         if (!interaction.isButton()) return;
 
         if (interaction.customId === 'start-setup') {
-            const { network, collectionSlug } = await setup.setup(interaction);
+            const { network, collectionSlug } = await setup.setupInteraction(
+                interaction
+            );
             console.log(`Setup started for ${network}/${collectionSlug}`);
 
             db.set('network', network);
             db.set('collection_slug', collectionSlug);
 
-            await interaction.channel.send('Setup complete!');
+            const completeMessage = await interaction.channel.send(
+                'Setup complete!'
+            );
+            setTimeout(() => completeMessage.delete(), 5000);
         }
     },
 };
