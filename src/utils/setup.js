@@ -1,314 +1,134 @@
-const {
-    Channel,
-    TextChannel,
-    Interaction,
-    Message,
-    ButtonInteraction,
-    MessageEmbed,
-    MessageReaction,
-    User,
-    GuildMember,
-} = require('discord.js');
+const { TextChannel, Message, MessageEmbed } = require('discord.js');
 const db = require('../core/db');
 
 /**
  *
  * @param {Message} message
+ * @param {Object} question
+ * @param {string} question.text
+ * @param {string} question.valueType
+ * @param {Array<string>} validAnswers
  */
-const networkQuestionMessage = async (message) => {
-    const channel = message.channel;
-
-    if (!channel.isText()) return;
-
-    const questionMessage = await channel.send(
-        'Please enter the network you would like to interact with. (1. ETH)'
-    );
-
-    const networkMessages = await channel.awaitMessages({
+const getAnswer = async (message, question, validAnswers = []) => {
+    const response = await message.channel.awaitMessages({
         max: 1,
-        filter: (m) => m.author.id === interaction.user.id,
+        time: 30000,
+        filter: (m) => m.author.id === message.author.id,
     });
+    const answer = response.first().content;
 
-    const selectedNetwork = networkMessages.first().content;
-    if (selectedNetwork != '1') {
-        await questionMessage.delete();
-        networkMessages.forEach(async (m) => {
-            if (!m || m.deleted || !m.deletable) {
-                return;
-            }
-
-            await m.delete();
-        });
-        return await networkQuestionMessage(message);
+    if (
+        validAnswers.length > 0 &&
+        !validAnswers.map((x) => x.toLowerCase()).includes(answer.toLowerCase())
+    ) {
+        return await askQuestion(message, question, validAnswers);
     }
 
-    await questionMessage.delete();
-
-    networkMessages.forEach(async (m) => await m.delete());
-
-    return selectedNetwork;
-};
-
-/**
- *
- * @param {ButtonInteraction} interaction
- */
-const networkQuestionInteraction = async (interaction) => {
-    //This removes the "Please wait..." message in the beginning
-
-    // Check if reply is already deleted
-    try {
-        const intReply = await interaction.fetchReply();
-        if (!intReply.deleted) {
-            await interaction.deleteReply();
-        }
-    } catch (e) {
-        if (e.message !== 'Unknown Message') {
-            throw e;
-        }
+    //Cast answer to valueType
+    switch (question.valueType) {
+        case 'number':
+            return Number(answer);
+        case 'string':
+            return answer;
+        default:
+            return answer;
     }
-
-    const channel = interaction.channel;
-
-    if (!channel.isText()) return;
-
-    const questionMessage = await channel.send(
-        'Please enter the network you would like to interact with. (1. ETH)'
-    );
-
-    const networkMessages = await channel.awaitMessages({
-        max: 1,
-        filter: (m) => m.author.id === interaction.user.id,
-    });
-
-    const selectedNetwork = networkMessages.first().content;
-    if (selectedNetwork != '1') {
-        await questionMessage.delete();
-        networkMessages.forEach(async (m) => {
-            if (!m || m.deleted || !m.deletable) {
-                return;
-            }
-
-            await m.delete();
-        });
-        return await networkQuestion(interaction);
-    }
-
-    await questionMessage.delete();
-
-    networkMessages.forEach(async (m) => await m.delete());
-
-    return selectedNetwork;
-};
-
-/**
- *
- * @param {Message} Message
- */
-const smartContractQuestionMessage = async (message) => {
-    const channel = message.channel;
-
-    if (!channel.isText()) return;
-
-    const questionMessage = await channel.send(
-        'Please paste your Smart Contract address in below'
-    );
-
-    const smartContractMessages = await channel.awaitMessages({
-        max: 1,
-        filter: (m) => m.author.id === interaction.user.id,
-    });
-
-    const smartContractAdd = smartContractMessages.first().content;
-
-    db.set('smart_contract', smartContractAdd);
-
-    await questionMessage.delete();
-
-    smartContractMessages.forEach(async (m) => await m.delete());
-
-    return smartContractAdd;
-};
-
-/**
- *
- * @param {ButtonInteraction} interaction
- */
-const smartContractQuestionInteraction = async (interaction) => {
-    const channel = interaction.channel;
-
-    if (!channel.isText()) return;
-
-    const questionMessage = await channel.send(
-        'Please paste your Smart Contract address in below'
-    );
-
-    const smartContractMessages = await channel.awaitMessages({
-        max: 1,
-        filter: (m) => m.author.id === interaction.user.id,
-    });
-
-    const smartContractAdd = smartContractMessages.first().content;
-
-    db.set('smart_contract', smartContractAdd);
-
-    await questionMessage.delete();
-
-    smartContractMessages.forEach(async (m) => await m.delete());
-
-    return smartContractAdd;
 };
 
 /**
  *
  * @param {Message} message
  */
-const collectionSlugQuestionMessage = async (message) => {
-    const channel = message.channel;
+const setup = async (message) => {
+    const questions = [
+        {
+            text: '1. What network is your NFT collection on?',
+            valueType: 'string',
+            validAnswers: ['Ethereum', 'Solana', 'Eth', 'Sol'],
+        },
+        {
+            text: 'Please paste your Smart Contract address in below',
+            valueType: 'string',
+            validAnswers: [],
+        },
+        {
+            text: 'Please paste your OpenSea collection URL Slug [example slug: opensea.io/URL-Slug]',
+            valueType: 'string',
+            validAnswers: [],
+        },
+        {
+            text: "1. Please enter your official Collection title exactly as you'd like it to appear:",
+            valueType: 'string',
+            validAnswers: [],
+        },
+        {
+            text: 'Which discord channel do you want sales posted? Just mention the channel to reply.',
+            valueType: 'string',
+            validAnswers: [],
+        },
+    ];
 
-    if (!channel.isText()) return;
+    const answers = [];
 
-    const questionMessage = await channel.send(
-        'Please paste your OpenSea collection URL Slug [example slug: opensea.io/URL-Slug]:'
-    );
-
-    const collectionSlugMessages = await channel.awaitMessages({
-        filter: (m) => m.author.id === interaction.user.id,
-        time: 60000,
-        max: 1,
-        errors: ['time'],
-    });
-
-    const selectedCollectionSlug = collectionSlugMessages.first().content;
-
-    await questionMessage.delete();
-
-    collectionSlugMessages.forEach(async (m) => await m.delete());
-
-    return selectedCollectionSlug;
-};
-
-/**
- *
- * @param {ButtonInteraction} interaction
- */
-const collectionSlugQuestionInteraction = async (interaction) => {
-    const channel = interaction.channel;
-
-    if (!channel.isText()) return;
-
-    const questionMessage = await channel.send(
-        'Please paste your OpenSea collection URL Slug [example slug: opensea.io/URL-Slug]:'
-    );
-
-    const collectionSlugMessages = await channel.awaitMessages({
-        filter: (m) => m.author.id === interaction.user.id,
-        time: 60000,
-        max: 1,
-        errors: ['time'],
-    });
-
-    const selectedCollectionSlug = collectionSlugMessages.first().content;
-
-    await questionMessage.delete();
-
-    collectionSlugMessages.forEach(async (m) => await m.delete());
-
-    return selectedCollectionSlug;
-};
-
-/**
- *
- * @param {ButtonInteraction} interaction
- * @returns
- */
-const setupInteraction = async (interaction) => {
-    if (!interaction.isButton()) return;
-
-    await interaction.reply('Please wait...');
-    const selectedNetwork = await networkQuestion(interaction);
-    const selectedSlug = await collectionSlugQuestion(interaction);
-    const smartContractAdd = await smartContractQuestion(interaction);
-
-    return {
-        network: selectedNetwork,
-        collectionSlug: selectedSlug,
-        smartContract: smartContractAdd,
-    };
-};
-
-/**
- *
- * @param {Message} message
- */
-const setupMessage = async (message) => {
-    await message.reply('Please wait...');
-    const selectedNetwork = await networkQuestionMessage(message);
-    const selectedSlug = await collectionSlugQuestionMessage(message);
-    const smartContractAdd = await smartContractQuestionMessage(message);
-
-    return {
-        network: selectedNetwork,
-        collectionSlug: selectedSlug,
-        smartContract: smartContractAdd,
-    };
-};
-
-/**
- *
- * @param {TextChannel} channel
- * @param {User} watchedUser
- * @param {Array<Object>} setupFields
- */
-const setupReview = async (channel, watchedUser, setupFields) => {
-    const reviewEmbed = new MessageEmbed();
-
-    reviewEmbed.setTitle('Setup Review');
-    reviewEmbed.setDescription('Please review the setup below.');
-    setupFields.forEach((_) => reviewEmbed.addField(_.name, _.value));
-
-    const message = await channel.send({
-        embeds: [reviewEmbed],
-    });
-
-    // Add reactions
-    await message.react('✅');
-    await message.react('❌');
-
-    const filter = (reaction, user) => {
-        return (
-            ['✅', '❌'].includes(reaction.emoji.name) &&
-            user.id === watchedUser.id
+    for (let i = 0; i < questions.length; i++) {
+        const questionEmbed = new MessageEmbed()
+            .setTitle('Setup - Question ' + (i + 1))
+            .setDescription(questions[i].text)
+            .addFields(
+                questions[i].validAnswers.map((x) => ({
+                    name: x,
+                    value: '✅',
+                    inline: true,
+                }))
+            )
+            .setColor('#0099ff');
+        await message.channel.send({
+            embeds: [questionEmbed],
+        });
+        answers.push(
+            await getAnswer(message, questions[i], questions[i].validAnswers)
         );
-    };
-
-    try {
-        const reaction = await message.awaitReactions({
-            filter,
-            max: 1,
-            time: 60000,
-            errors: ['time'],
-        });
-
-        const reactionEmoji = reaction.first().emoji.name;
-
-        if (reactionEmoji === '✅') {
-            console.log('Setup accepted');
-            await message.delete();
-            return true;
-        }
-    } catch (err) {
-        console.log(`Setup review timed out: ${err}`);
-        //Do nothing right now.
     }
 
-    console.log('Setup cancelled');
-    await message.delete();
-    return false;
+    /**
+     * @type {Array<string>}
+     * @property {string} network
+     * @property {string} contractAddress
+     * @property {string} collectionUrlSlug
+     * @property {string} collectionTitle
+     * @property {string} salesChannel
+     */
+    const [
+        network,
+        contractAddress,
+        collectionSlug,
+        collectionTitle,
+        salesChannel,
+    ] = answers;
+
+    db.set('collection_slug', collectionSlug);
+    db.set('collection_title', collectionTitle);
+    db.set('contract_address', contractAddress);
+    db.set('network', network);
+    db.set('channel_id', salesChannel.replace(/[<#>]/g, ''));
+    db.set('guild_id', message.guildId);
+    db.save();
+
+    const completedEmbed = new MessageEmbed()
+        .setTitle('Setup Complete')
+        .setDescription(
+            `Your NFT collection has been setup!\n\n` +
+                `**Network:** ${network}\n` +
+                `**Contract Address:** ${contractAddress}\n` +
+                `**Collection Slug:** ${collectionSlug}\n` +
+                `**Collection Title:** ${collectionTitle}\n` +
+                `**Sales Channel:** ${salesChannel}\n`
+        )
+        .setColor('#00ff00');
+
+    await message.channel.send({
+        embeds: [completedEmbed],
+    });
 };
 
-module.exports = {
-    setupInteraction,
-    setupMessage,
-    setupReview,
-};
+module.exports = setup;

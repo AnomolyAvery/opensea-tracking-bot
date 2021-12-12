@@ -1,5 +1,5 @@
 const { Client, Message } = require('discord.js');
-const { setup } = require('../utils/setup');
+const setup = require('../utils/setup');
 
 const setupCommand = {
     name: 'setup',
@@ -13,6 +13,8 @@ const setupCommand = {
      * @param {Array<string>} args
      */
     handler: async (client, message, args) => {
-        const {} = await setup();
+        await setup(message);
     },
 };
+
+module.exports = setupCommand;
