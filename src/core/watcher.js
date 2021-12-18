@@ -215,7 +215,7 @@ class Watcher {
         embed
             .setTitle(assetName)
             .setURL(openseaLink)
-            .setThumbnail(imageUrl)
+            .setImage(imageUrl)
             .setDescription(
                 `just sold for **${formattedEthPrice} ETH** (*${formattedUsdPrice.toFixed(
                     2

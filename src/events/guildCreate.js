@@ -45,17 +45,7 @@ const guildCreate = {
 
         const welcomeMessage = config.welcomeMessage.description;
 
-        const button = new MessageButton()
-            .setStyle('PRIMARY')
-            .setLabel('Start Setup')
-            .setCustomId('start-setup');
-
-        const actionRow = new MessageActionRow().addComponents(button);
-
-        await trackingConfig.send({
-            content: welcomeMessage,
-            components: [actionRow],
-        });
+        await trackingConfig.send(welcomeMessage);
     },
 };
 
